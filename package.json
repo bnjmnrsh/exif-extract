@@ -1,0 +1,18 @@
+{
+  "name": "exif-extract",
+  "version": "1.0.0",
+  "description": "A thin wrapper for exif-vendored",
+  "main": "exif-extract.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "exiftool",
+    "exiftool-vendored"
+  ],
+  "author": "bnjmnrsh",
+  "license": "ISC",
+  "dependencies": {
+    "exiftool-vendored": "^26.0.0"
+  }
+}
