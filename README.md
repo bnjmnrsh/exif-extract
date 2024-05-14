@@ -1,10 +1,10 @@
 # EXIF EXTRACT
 
-`exif-extract` is a thin wrapper for [`exiftool-vendored`](https://photostructure.github.io/exiftool-vendored.js/index.html), which in turn, is a JavaScript implementation of the excellent `exiftool` CLI.
+`exif-extract` is a thin wrapper for [`exiftool-vendored`](https://photostructure.github.io/exiftool-vendored.js/index.html), which in turn, is a JavaScript implementation of the excellent CLI application [`exiftool`](https://exiftool.org).
 
-`exif-extract` is designed to iterate over the content of a directory tree searching for targeted media types and return a filtered set of EXIF metadata either as a JavaScript object or written to the filesystem as JSON. `exif-extract` provides a simple API and basic configuration options to return default values for empty EXIF tags, and optionally write these values back to the media file if desired.
+`exif-extract` is designed to iterate over the content of a directory tree searching for targeted media types and returns a filtered set of EXIF metadata either as a JavaScript object or written to the filesystem as JSON. `exif-extract` provides a simple API and basic configuration options, including the ability to return default values for empty/missing EXIF tags, and optionally write these values back to the media file if desired.
 
-`exif-extract` was created to serve JSON endpoints for [Astro Data Collections](https://docs.astro.build/en/guides/content-collections/) from directories of media files richly annotated with EXIF data by photographers using Adobe Bridge. However, `exif-extract` is agnostic of both Astro and Adobe Bridge and is compatible with any EXIF key supported by `exiftool-vendored`, though the documentation here highlights key-field mappings using Adobe Bridge's 'IPTC CORE' metadata fields.
+`exif-extract` was created to generate JSON endpoints for [Astro Data Collections](https://docs.astro.build/en/guides/content-collections/) from a directory of media files annotated using Adobe Bridge. While the documentation and examples here are primarily concerned with key-field mappings between Adobe Bridge's 'IPTC CORE' metadata fields and `exiftool` tags, `exif-extract` is agnostic of both Astro and Adobe Bridge and is compatible with any EXIF key supported by `exiftool-vendored`.
 
 ## INDEX
 
@@ -49,7 +49,7 @@ We recommend pegging your install to a tag, as this will help ensure any upstrea
 import { extractMetadata, extractMetadataToJsonFile } from 'exif-extract'
 ```
 
-Both methods accept the same base settings object, with `extractMetadataToJsonFile` requiring `opt.outputPath` and `opt.outputFilename` properties.
+Both methods accept the same base settings object, with `extractMetadataToJsonFile` additionally requiring `opt.outputPath` and `opt.outputFilename` properties.
 
 ## OPTIONS
 
@@ -60,13 +60,13 @@ Both methods accept the same base settings object, with `extractMetadataToJsonFi
 | `opt.__dirname<String>`                               | The full path to the root of your project. It is used to extrapolate relative paths between the source media files and the output JSON file (if any). |
 | `opt.srcDir<String>`                                  | A relative path from `__dirname` to the source media files' directory. (i.e. `../src/media-archive`)                                                  |
 | `opt.validExtensions<Array.<String>>`                 | An array of file extensions to include. (Defaults to ['.jpg', '.jpeg']). Maybe [any supported file type](https://exiftool.org/#supported).            |
-| `opt.exifTags<Array.<String\|Object>>`                | An array of EXIF tags to extract from the media files. If not provided, any tags available on media files will be loaded (Defaults to ['*'])          |
+| `opt.exifTags<Array.<String\|Object>>`                | An array of EXIF tags to extract from the media files. If an empty array is provided (default), all available metadata will be extracted.             |
 | `opt.outputPath<String>` ( `extractMetadata()` only ) | Relative Path. A path to the output directory relative to your calling script. (i.e. `../src/content/media-archive`)                                  |
-| `opt.fileName<String>` ( `extractMetadata()` only )   | The name of the output JSON file. (i.e. `media-archive.json`)                                                                                         |
+| `opt.fileName<String>` ( `extractMetadata()` only )   | The name of the output JSON file. (e.g. `media-archive.json`)                                                                                         |
 
 ### FALLBACK VALUES
 
-`exif-extract` will not pass empty EXIF tags to output; however, if desired, you may pass an object with a fallback value for specific tags.
+`exif-extract` strips empty EXIF tags from the output; however, if desired, you may pass an object with a fallback value for specific tags which will be passed through to the output.
 
 ```javascript
 const exifTags = [
@@ -77,24 +77,29 @@ const exifTags = [
 
 ### WRITING VALUES BACK TO FILE
 
-Writing back values to media files is particularly useful for tags whose value can be safely assumed and _must also_ exist on the media file (e.g., copyright information). These default values will not overwrite any existing value other than empty strings.
+Writing back values to media files is particularly useful for tags whose value can be safely assumed and _must also_ exist on the media file (e.g., copyright information). These default values will not overwrite any existing value found in the tag unless it is an empty string.
 
 ```javascript
 const exifTags = [
   {
     CopyrightNotice: {
-      val: '© Some rights reserved, saved back to the file',
+      val: '© Some rights reserved.',
       write: true // Write back to the media file
     }
+  },
+  {
+    Subject: { val: null, write: true } // passing null will unset a tag on the media file.
   }
 ]
 ```
 
-Note key values are typically strings and differ for some keys, and not all tags are writeable; refer to [`exiftool` tag documentation](https://exiftool.org/TagNames/index.html) for complete details.
+**NOTE:** Key values are typically but not always strings. Additionally not all tags are writeable. See [`exiftool` tag documentation](https://exiftool.org/TagNames/index.html) for complete details.
 
 ## USAGE
 
 ### Sample Implementation
+
+This could be called as part of a build step, or a standalone script.
 
 ```javascript
 import { extractMetadataToJsonFile } from 'exif-extract'
@@ -102,23 +107,25 @@ import { extractMetadataToJsonFile } from 'exif-extract'
 import path from 'path'.
 import { fileURLToPath } from 'url'
 
-// Get the directory path of the current script
-// ES modules cannot access node environmental vars like __dirname, so we must re-implement it.
+// Get the location of this script
+// ES modules cannot access node vars like __dirname, so we must re-implement it.
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // The source images' relative (or absolute) location
-const srcDir = path.join(__dirname, '../src/media-archive')
+const srcDir = path.join(__dirname, '../src/content/your-media-archive')
 
 // The relative location of the output JSON file
-const outputPath = '../src/content/media-archive/'
+const outputPath = '../src/content/your-media-archive/'
 
-// Output file name
+// Output file name with extension
 const fileName = 'media-archive.json'
 
 // The file types to include. Defaults to ['.jpg', '.jpeg']
 const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.mp3', '.mp4']
 
 // An array of EXIF fields to extract from media files; the exact tags available depend on the file type; see notes below.
+// Defaults to an empty array, which will extract all available tags on each file.
+// This can be good for inspecting what tags are avalible, but is a lot of extraneous data.
 const exifTags = [
   'FileName',
   'SourceFile',
@@ -132,8 +139,9 @@ const exifTags = [
   'Description',
   { AltTextAccessibility : 'An image of an engineer reading documentation.' }, // Object syntax, not saved to file
   {
-    CopyrightNotice: {val: '© All rights reserved.', write: true} // Object syntax, saved to file
-  }
+    CopyrightNotice: {val: '© All rights reserved.', write: true} // Object syntax, saved back to file metadata
+  },
+  'CreatorContactInfo'
 ]
 
 extractMetadataToJsonFile({
@@ -153,7 +161,7 @@ extractMetadataToJsonFile({
 
 ### Parallelism
 
-`exif-extract` uses `exiftool-vendored` as a singleton to extract one file per call. To improve performance, `exif-extract` uses a promises-based approach to asynchronously process multiple files at once, and it is throttled by the default settings of the `exiftool-vendored` singleton. `exif-extract` does not currently offer a direct way to manipulate the `exiftool-vendored` singleton default settings.
+`exif-extract` uses `exiftool-vendored` as a singleton to extract one file per call. To improve performance, `exif-extract` uses a promises-based approach to asynchronously process multiple files at once, which is is throttled by the default settings of the `exiftool-vendored` singleton. `exif-extract` does not currently offer a direct way to manipulate the `exiftool-vendored` singleton default settings.
 
 See [exiftool-vendored Performance](https://github.com/photostructure/exiftool-vendored.js?tab=readme-ov-file#performance) for details.
 
@@ -162,7 +170,7 @@ See [exiftool-vendored Performance](https://github.com/photostructure/exiftool-v
 ### EXIF keys populated by Adobe Bridge
 
 This table documents the EXIF keys populated by Adobe Bridge's 'IPTC CORE' metadata fields as extracted using `exiftool-vendored`.
-Official EXIF tag names are [PascalCased](https://photostructure.github.io/exiftool-vendored.js/index.html#md:tags).
+EXIF tag names are [PascalCased](https://photostructure.github.io/exiftool-vendored.js/index.html#md:tags), while compound or prefixed tags must be set in quotes e.g. `'XMP-xmpRights:Marked'`.
 
 | ADOBE BRIDGE FIELD                   | EXIFTOOL KEYS (JPEG)                                                           | ASYMMETRICAL TAGS / RESULTS              |
 | ------------------------------------ | ------------------------------------------------------------------------------ | ---------------------------------------- |
@@ -175,7 +183,7 @@ Official EXIF tag names are [PascalCased](https://photostructure.github.io/exift
 | Creator: Country                     | `CreatorCountry<String>`                                                       | `CreatorContactInfo.CiAdrCtry<String>`   |
 | Creator: Phone(s)                    | `CreatorWorkTelephone<String>`                                                 | `CreatorContactInfo.CiTelWork<String>`   |
 | Creator: Email(s)                    | `CreatorWorkEmail<String>`                                                     | `CreatorContactInfo.CiEmailWork<String>` |
-| Creator: Website(s)                  | `CreatorWorkURL<String>`                                                       | `CreatorContactInfo.CiUrlWork<String>`   |
+| Creator: Website(s)                  | `CreatorWorkURL<String>`,                                                      | `CreatorContactInfo.CiUrlWork<String>`   |
 | Headline                             | `Headline<String>`                                                             | n/a                                      |
 | Description                          | `Description<String>`, `Caption-Abstract<String>`                              | n/a                                      |
 | Alt Text (accessibility)             | `AltTextAccessibility<String>`                                                 | n/a                                      |
