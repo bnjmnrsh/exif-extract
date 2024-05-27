@@ -117,7 +117,7 @@ function validateOptions(opts) {
 }
 
 /**
- * Merge one object into another.
+ * Merge one object into another, while ensuring only keys in the original are assigned.
  *
  * @param {typedefs.Options} orig - Original or default object.
  * @param {typedefs.Options} provided - A provided object.
@@ -131,11 +131,9 @@ function validateOptions(opts) {
  * @returns {typedefs.Options} A merged object.
  */
 function mergeObjects(orig, provided) {
-  // Throw if provided are not valid.
-  validateOptions(provided)
-
   const merged = { ...orig }
-  for (const key in provided) {
+  for (const key in orig) {
+    // only assign values for keys that exist in original object.
     if (provided.hasOwnProperty(key)) {
       merged[key] = provided[key]
     }
@@ -304,6 +302,7 @@ function logMissingTag(absFilePath, tag, val) {
 export {
   isObject,
   mergeObjects,
+  validateOptions,
   writeTagToFile,
   logMissingTag,
   writeToFile,
