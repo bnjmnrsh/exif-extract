@@ -61,7 +61,7 @@ import {
  *
  * @param {String} dir
  * @param {String} __dirname
- * @param {Array.<typedefs.TagOpts>} exifTags
+ * @param {Array.<typedefs.TagOpts>} tagOptions
  * @param {Array.<string>} allowedMediaFileExtensions
  *
  * @returns {Promise<Array>} Array of objects with EXIF metadata from each media file.
@@ -69,7 +69,7 @@ import {
 async function processDirectories(
   dir,
   __dirname,
-  exifTags,
+  tagOptions,
   allowedMediaFileExtensions
 ) {
   const files = await getFiles(dir, allowedMediaFileExtensions)
@@ -78,7 +78,7 @@ async function processDirectories(
     throw new Error(`No media files found in ${dir}`)
   }
   const metadataPromises = files.map(
-    async (file) => await gatherTags(file, __dirname, exifTags)
+    async (file) => await gatherTags(file, __dirname, tagOptions)
   )
   try {
     const metadataList = await Promise.allSettled(metadataPromises)
@@ -95,13 +95,13 @@ async function processDirectories(
  *
  * @param {string} absFilePath - The absolute path to the media file.
  * @param {string} __dirname - The absolute path to the project directory.
- * @param {Array.<string|Object>} [exifTags=[]] - The EXIF tags to filter.
+ * @param {Array.<string|Object>} [tagOptions=[]] - The EXIF tags to filter.
  *
  * @returns {Promise<Object|Error>} - The filtered metadata object or an error.
  *
  * @throws {Error} - If there is an error reading the metadata.
  */
-async function gatherTags(absFilePath, __dirname, exifTags = []) {
+async function gatherTags(absFilePath, __dirname, tagOptions = []) {
   try {
     console.log('Reading:', absFilePath)
 
@@ -109,8 +109,8 @@ async function gatherTags(absFilePath, __dirname, exifTags = []) {
     const metadata = await exiftoolA.read(absFilePath) // metadata object from media file
     let filteredMetadata = {}
 
-    if (exifTags.length) {
-      for (const entry of exifTags) {
+    if (tagOptions.length) {
+      for (const entry of tagOptions) {
         const tag = typeof entry === 'string' ? entry : Object.keys(entry)[0] // get the current tag name to check
         const val = isObject(entry) ? entry[tag]?.val : entry[tag] // get the tag fallback value
 
@@ -168,7 +168,7 @@ async function gatherTags(absFilePath, __dirname, exifTags = []) {
  *   - __dirname: Absolute path to the relative project directory.
  *   - srcDir: Relative path of directory to traverse.
  *   - outputPath: A relative or absolute path to write JSON output, with filename.
- *   - exifTags: An array of EXIF tags to extract.
+ *   - tagOptions: An array of EXIF tags to extract.
  *   - validExtensions: An array of valid media extensions.
  *
  * @returns {Promise<Number|Object|Error>} A Promise that resolves to 0 if successful or an error object.
@@ -179,7 +179,7 @@ async function extractMetadata(opts) {
   if (!opts || typeof opts !== 'object') {
     throw new Error('opts must be an object. Received:', opts)
   }
-  const { __dirname, srcDir, exifTags, validExtensions } = mergeObjects(
+  const { __dirname, srcDir, tagOptions, validExtensions } = mergeObjects(
     defaults,
     opts
   )
@@ -188,7 +188,7 @@ async function extractMetadata(opts) {
     const metadataList = await processDirectories(
       srcDir,
       __dirname,
-      exifTags,
+      tagOptions,
       validExtensions
     )
     console.log('Metadata extracted.')
@@ -211,13 +211,13 @@ async function extractMetadata(opts) {
  *   - __dirname: Absolute path to the relative project directory.
  *   - srcDir: Relative path of directory to traverse.
  *   - outputPath: A relative or absolute path to write JSON output, with filename.
- *   - exifTags: An array of EXIF tags to extract.
+ *   - tagOptions: An array of EXIF tags to extract.
  *   - validExtensions: An array of valid media extensions.
  *
  * @returns {Promise<Object|Error>} A Promise that resolves to an object with the extracted metadata or an error object.
  */
 async function extractMetadataToJsonFile(opts) {
-  const { __dirname, srcDir, exifTags, validExtensions, outputPath } =
+  const { __dirname, srcDir, tagOptions, validExtensions, outputPath } =
     mergeObjects(defaults, opts)
   try {
     const metadata = await extractMetadata(opts)

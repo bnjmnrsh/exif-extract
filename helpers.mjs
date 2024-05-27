@@ -20,7 +20,7 @@ function isObject(value) {
  *   - __dirname: Absolute path to the relative project directory.
  *   - srcDir: Relative path of directory to traverse.
  *   - outputPath: A relative or absolute path to write JSON output, with filename.
- *   - exifTags: An array of EXIF tags to extract.
+ *   - tagOptions: An array of EXIF tags to extract.
  *   - validExtensions: An array of valid media extensions.
  *
  * @return {Boolean} Returns true if the path is writable, false otherwise.
@@ -59,14 +59,14 @@ function checkPathPermisions(filePath, opts) {
  *   - __dirname: Absolute path to the relative project directory.
  *   - srcDir: Relative path of directory to traverse.
  *   - outputPath: A relative or absolute path to write JSON output, with filename.
- *   - exifTags: An array of EXIF tags to extract.
+ *   - tagOptions: An array of EXIF tags to extract.
  *   - validExtensions: An array of valid media extensions.
  *
  * @returns {Void}
  *
  * @throws {Error} Throws an error if the options object is missing or not an object.
  * @throws {Error} Throws an error if the __dirname, srcDir, or outputPath property is missing or invalid.
- * @throws {Error} Throws an error if the exifTags property is present but not an array.
+ * @throws {Error} Throws an error if the tagOptions property is present but not an array.
  * @throws {Error} Throws an error if the validExtensions property is present but not an array.
  */
 function validateOptions(opts) {
@@ -88,8 +88,8 @@ function validateOptions(opts) {
     const resolvedpath = path.resolve(opts.__dirname, opts.outputPath)
     checkPathPermisions(resolvedpath, opts)
   }
-  if (opts.exifTags && !Array.isArray(opts.exifTags)) {
-    throw new Error('exifTags must be an array. Received:', opts.exifTags)
+  if (opts.tagOptions && !Array.isArray(opts.tagOptions)) {
+    throw new Error('tagOptions must be an array. Received:', opts.tagOptions)
   }
   if (opts.validExtensions && !Array.isArray(opts.validExtensions)) {
     throw new Error(
@@ -108,7 +108,7 @@ function validateOptions(opts) {
  *   - __dirname: Absolute path to the relative project directory.
  *   - srcDir: Relative path of directory to traverse.
  *   - outputPath: A relative or absolute path to write JSON output, with filename.
- *   - exifTags: An array of EXIF tags to extract.
+ *   - tagOptions: An array of EXIF tags to extract.
  *   - validExtensions: An array of valid media extensions.
  *
  * @returns {typedefs.Options} A merged object.
