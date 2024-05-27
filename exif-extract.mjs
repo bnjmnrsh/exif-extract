@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import { exiftool, ExifTool } from 'exiftool-vendored'
 import { error, log } from 'console'
-import * as Typedef from './typedefs.mjs'
+import * as typedefs from './typedefs.mjs'
 import {
   isObject,
   mergeObjects,
@@ -74,7 +74,7 @@ const defaults = {
  *
  * @param {String} dir
  * @param {String} __dirname
- * @param {Array.<Typedef.ExifTag>} exifTags
+ * @param {Array.<typedefs.ExifTag>} exifTags
  * @param {Array.<string>} allowedMediaFileExtensions
  *
  * @returns {Promise<Array>} Array of objects with EXIF metadata from each media file.
@@ -177,7 +177,7 @@ async function gatherTags(absFilePath, __dirname, exifTags = []) {
 /**
  * Extract metadata from images in a directory and return it as an object.
  *
- * @param {Typedef.Options} opts - An options object containing the following properties:
+ * @param {typedefs.Options} opts - An options object containing the following properties:
  *   - __dirname: Absolute path to the relative project directory.
  *   - srcDir: Relative path of directory to traverse.
  *   - outputPath: A relative or absolute path to write JSON output, with filename.
@@ -220,7 +220,7 @@ async function extractMetadata(opts) {
 /**
  * Extract metadata from images in a directory and save it to a JSON file.
  *
- * @param {Typedef.Options} opts - An options object containing the following properties:
+ * @param {typedefs.Options} opts - An options object containing the following properties:
  *   - __dirname: Absolute path to the relative project directory.
  *   - srcDir: Relative path of directory to traverse.
  *   - outputPath: A relative or absolute path to write JSON output, with filename.

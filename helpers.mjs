@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import * as Typedef from './typedefs.mjs'
+import * as typedefs from './typedefs.mjs'
 
 /**
  * Helper to check if a value is an object.
@@ -16,7 +16,7 @@ function isObject(value) {
  * Checks if a file or directory path is valid and writable.
  *
  * @param {String} filePath - The path to check for write-ability.
- * @param {Typedef.Options} opts - An options object containing the following properties:
+ * @param {typedefs.Options} opts - An options object containing the following properties:
  *   - __dirname: Absolute path to the relative project directory.
  *   - srcDir: Relative path of directory to traverse.
  *   - outputPath: A relative or absolute path to write JSON output, with filename.
@@ -55,7 +55,7 @@ function checkPathPermisions(filePath, opts) {
 /**
  *  Validate options. Throws if the options object is not formed correctly.
  *
- * @param {Typedef.Options} opts - An options object containing the following properties:
+ * @param {typedefs.Options} opts - An options object containing the following properties:
  *   - __dirname: Absolute path to the relative project directory.
  *   - srcDir: Relative path of directory to traverse.
  *   - outputPath: A relative or absolute path to write JSON output, with filename.
@@ -102,8 +102,8 @@ function validateOptions(opts) {
 /**
  * Merge one object into another.
  *
- * @param {Typedef.Options} orig - Original or default object.
- * @param {Typedef.Options} provided - A provided object.
+ * @param {typedefs.Options} orig - Original or default object.
+ * @param {typedefs.Options} provided - A provided object.
  *
  *   - __dirname: Absolute path to the relative project directory.
  *   - srcDir: Relative path of directory to traverse.
@@ -111,7 +111,7 @@ function validateOptions(opts) {
  *   - exifTags: An array of EXIF tags to extract.
  *   - validExtensions: An array of valid media extensions.
  *
- * @returns {Typedef.Options} A merged object.
+ * @returns {typedefs.Options} A merged object.
  */
 function mergeObjects(orig, provided) {
   // Throw if provided are not valid.
