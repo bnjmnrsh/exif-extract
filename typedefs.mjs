@@ -1,5 +1,5 @@
 /**
- * An EXIF tag preference, which may be:
+ * An EXIF tag preference object, which may be:
  *      - A string, the EXIF key name. This will simply include the tag value in the output, if it has been populated on the media file.
  *      - An object with the key and value. In this case, if the tag is not populated on the media file, the fallback value will be used if the key is not populated on the media file.
  *      - The value may also optionally be a key, with a val and write boolean. The write boolean is optional and defaults to false.
