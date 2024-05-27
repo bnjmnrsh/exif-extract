@@ -1,37 +1,26 @@
 import fs from 'fs'
-import { exiftool } from 'exiftool-vendored'
+import { exiftool, ExifTool } from 'exiftool-vendored'
 import path from 'path'
-import process from 'process'
 import { error, log } from 'console'
+import { validateOptions } from './helpers.mjs'
 
 /**
  * Extract metadata from images in a directory and return it as an object, or write to file as JSON.
  *
- * Note: Remember to call process.exit(0) before exiting to close the process.
- *
- * const  results = await extractMetadata(opts).then(result => {
- *     console.log('Success:', result)
- *     process.exit(0)
- * }).catch(error => {
- *     // handel error
- *     console.error('Error:', error)
- *     process.exit(1)
- * });
- *
- *
- * Also note: there is a lot of unevenness between tags and media/file types file types, which tools like Bridge and exiftool try to normalize where possible.
+ * Note: there is a lot of unevenness between tags and media/file types file types, which tools like Bridge and exiftool try to normalize where possible.
  * For example .mp4 files don't have a Keywords tag, so instead eAdobe Bridge also writes to the 'Subject' tag as this tag has better availability across media.
  * Also tags differ widely between manufacturers and even models so test your use cases extensively.
  *
  * Writing:
- * When passing a an EXIF tag object with a write boolean set to true, the tag will be written to the media file possible. No all tags can be written to,
- * and some appear quite differently to fields that might appear in Adobe Bridge. For example, "Creator: Website(s)" in Adobe Bridge can be populated with the tag: "CreatorWorkURL"œ
+ * When passing a an EXIF tag object with a write boolean set to true, the tag will be written to the media file if possible.
  *
+ * Also note, not all tags such as camera metadata may be written to, while others appear quite differently to field names in Adobe Bridge.
+ * For example, "Creator: Website(s)" in Adobe Bridge can be populated with the 'flattened' tag: "CreatorWorkURL" or 'xmp:CreatorWorkURL'.
  *
  * @see https://exiftool.org/#links
  * @see https://exiftool.org/TagNames/
  *
- * // Common universal tags
+ * // Common tags
  * @see https://exiftool.org/TagNames/EXIF.html
  * @see https://exiftool.org/TagNames/XMP.html
  * @see https://exiftool.org/TagNames/IPTC.html
@@ -45,7 +34,14 @@ import { error, log } from 'console'
  *
  * @todo complete the use of fileWrite, by extracting the filename from the save path in both extractMetadataToJsonFile, and extractMetadata.
  * @todo add documentation on the asymmetry of tags like CreatorWorkURL and Creator: Website(s), and how they differ between Adobe Bridge
+ * -- research this more.
  * @todo add filter to missing tags log that if its empty, don't write anything.
+ * @todo add exception to exiftool reports, if it comes back with an error - throw(?) but def add to the log for that file
+ * @todo we don't need to write to file for each tag on each file. Instead collect the write reports errors object, and write it at the end.
+ * @todo in fact we might be able to collect all the writes and send them to exiftool in one go, and then process the results.
+ *
+ * @todo due to the the assymmetry of 'flattened' tags  --- a write action on one of these tags will always overwrite the origional value.
+ * --- This is due to the flattened tag acting only as setter and not as a getter. Therefore the 'write' option will always be true due to the null check.
  */
 
 /**
@@ -91,97 +87,10 @@ const defaults = {
 }
 
 /**
- *  Validate options. Throws if the options object is not formed correctly.
+ * Merge one object into another.
  *
- * @param {Options} opts - An options object containing the following properties:
- *   - __dirname: Absolute path to the relative project directory.
- *   - srcDir: Relative path of directory to traverse.
- *   - outputPath: A relative or absolute path to write JSON output, with filename.
- *   - exifTags: An array of EXIF tags to extract.
- *   - validExtensions: An array of valid media extensions.
- *
- * @returns {Void}
- *
- * @throws {Error} Throws an error if the options object is missing or not an object.
- * @throws {Error} Throws an error if the __dirname, srcDir, or outputPath property is missing or invalid.
- * @throws {Error} Throws an error if the exifTags property is present but not an array.
- * @throws {Error} Throws an error if the validExtensions property is present but not an array.
- */
-function validateOptions(opts) {
-  if (!opts || typeof opts !== 'object') {
-    throw new Error(
-      'You must pass an options object minimally containing: "__dirname", "srcDir", and "outputPath" properties. Instead Received:',
-      opts
-    )
-  }
-  validatePathParam(opts.__dirname, opts)
-
-  validatePathParam(opts.srcDir, opts)
-
-  // outputPath may be a relative path so check last as it needs a valid opts.__dirname to compute.
-  if (path.isAbsolute(opts.outputPath)) {
-    console.log('outputPath is absolute:', opts.outputPath)
-    validatePathParam(opts.outputPath, opts)
-  } else {
-    const resolvedpath = path.resolve(opts.__dirname, opts.outputPath)
-    validatePathParam(resolvedpath, opts)
-  }
-  if (opts.exifTags && !Array.isArray(opts.exifTags)) {
-    throw new Error('exifTags must be an array. Received:', opts.exifTags)
-  }
-  if (opts.validExtensions && !Array.isArray(opts.validExtensions)) {
-    throw new Error(
-      'validExtensions must be an array. Received:',
-      validExtensions
-    )
-  }
-}
-
-/**
- * Checks if a file or directory path is valid and writable.
- *
- * @param {String} filepath - The path to check for write-ability.
- * @param {Options} opts - An options object containing the following properties:
- *   - __dirname: Absolute path to the relative project directory.
- *   - srcDir: Relative path of directory to traverse.
- *   - outputPath: A relative or absolute path to write JSON output, with filename.
- *   - exifTags: An array of EXIF tags to extract.
- *   - validExtensions: An array of valid media extensions.
- *
- * @return {Boolean} Returns true if the path is writable, false otherwise.
- *
- * @throws {Error} Throws an error if the path is not a valid path or does not have write permissions.
- */
-function validatePathParam(filepath, opts) {
-  try {
-    // Get the key name as a string
-    const keyName = Object.entries(opts).find(([k, v]) => v === filepath)?.[0]
-
-    if (!filepath || typeof filepath !== 'string') {
-      throw new Error(`${keyName} must be a string. Received: ${typeof path}`)
-    }
-
-    // Check if the path is valid
-    fs.access(path.dirname(filepath), fs.constants.W_OK, (err) => {
-      if (err) {
-        console.error(`${path.dirname(filepath)} is not writable`)
-        throw new Error(
-          `${keyName} is not a valid path or you don't have the correct permissions? Received: ${path}`
-        )
-      } else {
-        return true
-      }
-    })
-  } catch (error) {
-    throw new Error(error)
-  }
-}
-
-/**
- * Merge default and user options.
- *
- * @param {Options} defaults - The default options.
- * @param {Options} userOptions - The user options.
+ * @param {Options} orig - Original or default object.
+ * @param {Options} provided - A provided object.
  *
  *   - __dirname: Absolute path to the relative project directory.
  *   - srcDir: Relative path of directory to traverse.
@@ -189,16 +98,16 @@ function validatePathParam(filepath, opts) {
  *   - exifTags: An array of EXIF tags to extract.
  *   - validExtensions: An array of valid media extensions.
  *
- * @returns {Options} A merged options object.
+ * @returns {Options} A merged object.
  */
-function mergeOptions(defaults, userOptions) {
-  // Throw if userOptions are not valid.
-  validateOptions(userOptions)
+function mergeOptions(orig, provided) {
+  // Throw if provided are not valid.
+  validateOptions(provided)
 
-  const mergedOptions = { ...defaults }
-  for (const key in userOptions) {
-    if (userOptions.hasOwnProperty(key)) {
-      mergedOptions[key] = userOptions[key]
+  const mergedOptions = { ...orig }
+  for (const key in provided) {
+    if (provided.hasOwnProperty(key)) {
+      mergedOptions[key] = provided[key]
     }
   }
 
@@ -216,13 +125,13 @@ function isObject(value) {
 }
 
 /**
- * Function to recursively traverse directories and return all files with a given extension.
+ * Function to recursively traverse directories and return an array of all files that match any of the provided extensions.
  *
  * @param {String} dir - Absolute path of directory to traverse.
  * @param @param {Array.<String>} extensions - An array of valid extensions
  * @param @param {Array.<String>} filesList - An optional array of files
  *
- * @returns {Promise<Array.<Object>>} - The list of files
+ * @returns {Promise<Array.<Object>>} - The array of files
  */
 async function getFiles(dir, extensions, filesList = []) {
   try {
@@ -274,7 +183,7 @@ async function processDirectories(
     throw new Error(`No media files found in ${dir}`)
   }
   const metadataPromises = files.map(
-    async (file) => await filterTags(file, __dirname, exifTags)
+    async (file) => await gatherTags(file, __dirname, exifTags)
   )
   try {
     const metadataList = await Promise.allSettled(metadataPromises)
@@ -340,7 +249,7 @@ function logMissingTag(absFilePath, tag, val) {
 }
 
 /**
- * Filters out the provided EXIF tags from an image's metadata.
+ * Filters the metadata object by collecting the provided EXIF tags from an image's metadata.
  *
  * @param {string} absFilePath - The absolute path to the media file.
  * @param {string} __dirname - The absolute path to the project directory.
@@ -350,29 +259,41 @@ function logMissingTag(absFilePath, tag, val) {
  *
  * @throws {Error} - If there is an error reading the metadata.
  */
-async function filterTags(absFilePath, __dirname, exifTags = []) {
+async function gatherTags(absFilePath, __dirname, exifTags = []) {
   try {
     console.log('Reading:', absFilePath)
-    const metadata = await exiftool.read(absFilePath)
+
+    const exiftoolA = new ExifTool({ Struct: 2 })
+    const metadata = await exiftoolA.read(absFilePath) // metadata object from media file
     let filteredMetadata = {}
 
     if (exifTags.length) {
       for (const entry of exifTags) {
-        const tag = typeof entry === 'string' ? entry : Object.keys(entry)[0]
-        const val = isObject(entry) ? entry[tag]?.val : entry[tag]
+        const tag = typeof entry === 'string' ? entry : Object.keys(entry)[0] // get the current tag name to check
+        const val = isObject(entry) ? entry[tag]?.val : entry[tag] // get the tag fallback value
 
         if (
           metadata[tag] === undefined ||
           metadata[tag] === null ||
-          /^\s*$/.test(metadata[tag])
+          /^\s*$/.test(metadata[tag]) // contains only whitespace
         ) {
           if (isObject(entry) && !entry[tag].hasOwnProperty('val')) {
+            // if entry is an object and does not contain a 'val' property
             filteredMetadata[tag] = entry[tag]
           } else if (isObject(entry) && entry[tag].hasOwnProperty('val')) {
+            // if entry is an object and contains a 'val' property
             filteredMetadata[tag] = val
+
+            console.log('tagname:', tag)
+            console.log('tag value on file:', metadata[tag])
+            console.log('tag fallback value:', metadata[tag])
+
             if (entry[tag].write) {
-              await writeTagToFile(absFilePath, tag, val)
+              //   await writeTagToFile(absFilePath, tag, val)
               logMissingTag(absFilePath, tag, val)
+              console.warn(
+                `-- exiftool writing: ${tag} : current value is ${metadata[tag]}::${val}`
+              )
             }
           }
         } else {
@@ -393,7 +314,7 @@ async function filterTags(absFilePath, __dirname, exifTags = []) {
     return filteredMetadata
   } catch (error) {
     console.error(`Error reading metadata for ${absFilePath}:`, error)
-    process.exit(1)
+    await exiftool.end()
     throw new Error(`Error reading metadata for ${absFilePath}:`, error)
   }
 }
@@ -463,8 +384,6 @@ async function writeToFile(
 /**
  * Extract metadata from images in a directory and return it as an object.
  *
- * NOTE: Remember to call process.exit(0) when you're done!
- *
  * @param {Options} opts - An options object containing the following properties:
  *   - __dirname: Absolute path to the relative project directory.
  *   - srcDir: Relative path of directory to traverse.
@@ -476,7 +395,7 @@ async function writeToFile(
  *
  * @throws {Error} If there is an error extracting metadata.
  */
-export async function extractMetadata(opts) {
+async function extractMetadata(opts) {
   if (!opts || typeof opts !== 'object') {
     throw new Error('opts must be an object. Received:', opts)
   }
@@ -496,9 +415,11 @@ export async function extractMetadata(opts) {
     if (missingTags.length > 0) {
       console.error('Missing metadata:', missingTags)
     }
+    await exiftool.end()
     return Promise.resolve(metadataList) // Return the metadataList;
   } catch (error) {
     console.error('Error extracting metadata:', error)
+    await exiftool.end()
     throw error
   }
 }
@@ -515,7 +436,7 @@ export async function extractMetadata(opts) {
  *
  * @returns {Promise<Object|Error>} A Promise that resolves to an object with the extracted metadata or an error object.
  */
-export async function extractMetadataToJsonFile(opts) {
+async function extractMetadataToJsonFile(opts) {
   const { __dirname, srcDir, exifTags, validExtensions, outputPath } =
     mergeOptions(defaults, opts)
   try {
@@ -533,7 +454,7 @@ export async function extractMetadataToJsonFile(opts) {
       path.resolve(__dirname, outputPath)
     )
 
-    if (missingTag.keys.length > 0) {
+    if (Object.keys(missingTags).length > 0) {
       try {
         const now = new Date()
         await writeToFile(
@@ -548,10 +469,11 @@ export async function extractMetadataToJsonFile(opts) {
         throw error
       }
     }
-
     return Promise.resolve(metadata)
   } catch (error) {
     console.error('Error writing metadata to file:', error)
     throw error
   }
 }
+
+export { extractMetadata, extractMetadataToJsonFile }
