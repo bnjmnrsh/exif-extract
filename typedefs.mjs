@@ -9,7 +9,7 @@
  */
 
 /**
- * User Options object
+ * Options object
  *
  * @typedef {Object} Options - The default options.
  * @property {String} srcDir - Relative path of directory to traverse.
