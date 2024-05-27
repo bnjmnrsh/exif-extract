@@ -80,8 +80,17 @@ function validateOptions(opts) {
       opts
     )
   }
+  // validate required properties are present
+  if (!opts.dirName || !opts.srcDir || !opts.outputPath) {
+    throw new Error(
+      'You must pass an options object minimally containing: "dirName", "srcDir", and "outputPath" properties.'
+    )
+  }
+
+  // Validate dirName is a valid path
   checkPathPermisions(opts.dirName, opts)
 
+  // Validate srcDir is a valid path
   checkPathPermisions(opts.srcDir, opts)
 
   // outputPath may be a relative path so check last as it needs a valid opts.dirName to compute.
@@ -92,13 +101,17 @@ function validateOptions(opts) {
     const resolvedpath = path.resolve(opts.dirName, opts.outputPath)
     checkPathPermisions(resolvedpath, opts)
   }
+  // validate optional properties
   if (opts.tagOptions && !Array.isArray(opts.tagOptions)) {
-    throw new Error('tagOptions must be an array. Received:', opts.tagOptions)
+    throw new Error(
+      'tagOptions must be an array of Tag names, or Tag Options objects. Received:',
+      JSON.stringify(opts.tagOptions)
+    )
   }
   if (opts.validExtensions && !Array.isArray(opts.validExtensions)) {
     throw new Error(
       'validExtensions must be an array. Received:',
-      validExtensions
+      JSON.stringify(opts.validExtensions)
     )
   }
 }
