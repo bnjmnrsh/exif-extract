@@ -17,7 +17,7 @@ function isObject(value) {
  *
  * @param {String} filePath - The path to check for write-ability.
  * @param {typedefs.Options} opts - An options object containing the following properties:
- *   - __dirname: Absolute path to the relative project directory.
+ *   - dirName: The absolute path to the project directory.
  *   - srcDir: Relative path of directory to traverse.
  *   - outputPath: A relative or absolute path to write JSON output, with filename.
  *   - tagOptions: An array of EXIF tags to extract.
@@ -33,7 +33,9 @@ function checkPathPermisions(filePath, opts) {
     const keyName = Object.entries(opts).find(([k, v]) => v === filePath)?.[0]
 
     if (!filePath || typeof filePath !== 'string') {
-      throw new Error(`${keyName} must be a string. Received: ${typeof path}`)
+      throw new Error(
+        `${keyName} must be a string. Received: ${typeof keyName}`
+      )
     }
 
     // Check if the path is valid
@@ -56,7 +58,7 @@ function checkPathPermisions(filePath, opts) {
  *  Validate options. Throws if the options object is not formed correctly.
  *
  * @param {typedefs.Options} opts - An options object containing the following properties:
- *   - __dirname: Absolute path to the relative project directory.
+ *   - dirName: The absolute path to the project directory.
  *   - srcDir: Relative path of directory to traverse.
  *   - outputPath: A relative or absolute path to write JSON output, with filename.
  *   - tagOptions: An array of EXIF tags to extract.
@@ -65,27 +67,27 @@ function checkPathPermisions(filePath, opts) {
  * @returns {Void}
  *
  * @throws {Error} Throws an error if the options object is missing or not an object.
- * @throws {Error} Throws an error if the __dirname, srcDir, or outputPath property is missing or invalid.
+ * @throws {Error} Throws an error if the dirName, srcDir, or outputPath property is missing or invalid.
  * @throws {Error} Throws an error if the tagOptions property is present but not an array.
  * @throws {Error} Throws an error if the validExtensions property is present but not an array.
  */
 function validateOptions(opts) {
   if (!opts || typeof opts !== 'object') {
     throw new Error(
-      'You must pass an options object minimally containing: "__dirname", "srcDir", and "outputPath" properties. Instead Received:',
+      'You must pass an options object minimally containing: "dirName", "srcDir", and "outputPath" properties. Instead Received:',
       opts
     )
   }
-  checkPathPermisions(opts.__dirname, opts)
+  checkPathPermisions(opts.dirName, opts)
 
   checkPathPermisions(opts.srcDir, opts)
 
-  // outputPath may be a relative path so check last as it needs a valid opts.__dirname to compute.
+  // outputPath may be a relative path so check last as it needs a valid opts.dirName to compute.
   if (path.isAbsolute(opts.outputPath)) {
     console.log('outputPath is absolute:', opts.outputPath)
     checkPathPermisions(opts.outputPath, opts)
   } else {
-    const resolvedpath = path.resolve(opts.__dirname, opts.outputPath)
+    const resolvedpath = path.resolve(opts.dirName, opts.outputPath)
     checkPathPermisions(resolvedpath, opts)
   }
   if (opts.tagOptions && !Array.isArray(opts.tagOptions)) {
@@ -105,7 +107,7 @@ function validateOptions(opts) {
  * @param {typedefs.Options} orig - Original or default object.
  * @param {typedefs.Options} provided - A provided object.
  *
- *   - __dirname: Absolute path to the relative project directory.
+ *   - dirName: The absolute path to the project directory.
  *   - srcDir: Relative path of directory to traverse.
  *   - outputPath: A relative or absolute path to write JSON output, with filename.
  *   - tagOptions: An array of EXIF tags to extract.

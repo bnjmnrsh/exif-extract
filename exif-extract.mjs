@@ -60,7 +60,7 @@ import {
  *
  *
  * @param {String} dir
- * @param {String} __dirname
+ * @param {String} dirName - Absolute path to the project directory.
  * @param {Array.<typedefs.TagOpts>} tagOptions
  * @param {Array.<string>} allowedMediaFileExtensions
  *
@@ -68,7 +68,7 @@ import {
  */
 async function processDirectories(
   dir,
-  __dirname,
+  dirName,
   tagOptions,
   allowedMediaFileExtensions
 ) {
@@ -78,7 +78,7 @@ async function processDirectories(
     throw new Error(`No media files found in ${dir}`)
   }
   const metadataPromises = files.map(
-    async (file) => await gatherTags(file, __dirname, tagOptions)
+    async (file) => await gatherTags(file, dirName, tagOptions)
   )
   try {
     const metadataList = await Promise.allSettled(metadataPromises)
@@ -94,14 +94,14 @@ async function processDirectories(
  * Filters the metadata object by gathering only the desired EXIF tags from an image's metadata.
  *
  * @param {string} absFilePath - The absolute path to the media file.
- * @param {string} __dirname - The absolute path to the project directory.
+ * @param {string} dirName - The absolute path to the project directory.
  * @param {Array.<string|Object>} [tagOptions=[]] - The EXIF tags to filter.
  *
  * @returns {Promise<Object|Error>} - The filtered metadata object or an error.
  *
  * @throws {Error} - If there is an error reading the metadata.
  */
-async function gatherTags(absFilePath, __dirname, tagOptions = []) {
+async function gatherTags(absFilePath, dirName, tagOptions = []) {
   try {
     console.log('Reading:', absFilePath)
 
@@ -148,9 +148,9 @@ async function gatherTags(absFilePath, __dirname, tagOptions = []) {
       // We've not passed a filter so return all metadata.
       filteredMetadata = metadata
     }
-    filteredMetadata.SourceFile = path.relative(__dirname, absFilePath)
+    filteredMetadata.SourceFile = path.relative(dirName, absFilePath)
     filteredMetadata.Directory = path.relative(
-      __dirname,
+      dirName,
       path.dirname(absFilePath)
     )
     return filteredMetadata
@@ -165,7 +165,7 @@ async function gatherTags(absFilePath, __dirname, tagOptions = []) {
  * Extract metadata from images in a directory and return it as an object.
  *
  * @param {typedefs.Options} opts - An options object containing the following properties:
- *   - __dirname: Absolute path to the relative project directory.
+ *   - dirName: The absolute path to the project directory.
  *   - srcDir: Relative path of directory to traverse.
  *   - outputPath: A relative or absolute path to write JSON output, with filename.
  *   - tagOptions: An array of EXIF tags to extract.
@@ -179,7 +179,7 @@ async function extractMetadata(opts) {
   if (!opts || typeof opts !== 'object') {
     throw new Error('opts must be an object. Received:', opts)
   }
-  const { __dirname, srcDir, tagOptions, validExtensions } = mergeObjects(
+  const { dirName, srcDir, tagOptions, validExtensions } = mergeObjects(
     defaults,
     opts
   )
@@ -187,7 +187,7 @@ async function extractMetadata(opts) {
   try {
     const metadataList = await processDirectories(
       srcDir,
-      __dirname,
+      dirName,
       tagOptions,
       validExtensions
     )
@@ -208,7 +208,7 @@ async function extractMetadata(opts) {
  * Extract metadata from images in a directory and save it to a JSON file.
  *
  * @param {typedefs.Options} opts - An options object containing the following properties:
- *   - __dirname: Absolute path to the relative project directory.
+ *   - dirName: The absolute path to the project directory.
  *   - srcDir: Relative path of directory to traverse.
  *   - outputPath: A relative or absolute path to write JSON output, with filename.
  *   - tagOptions: An array of EXIF tags to extract.
@@ -217,7 +217,7 @@ async function extractMetadata(opts) {
  * @returns {Promise<Object|Error>} A Promise that resolves to an object with the extracted metadata or an error object.
  */
 async function extractMetadataToJsonFile(opts) {
-  const { __dirname, srcDir, tagOptions, validExtensions, outputPath } =
+  const { dirName, srcDir, tagOptions, validExtensions, outputPath } =
     mergeObjects(defaults, opts)
   try {
     const metadata = await extractMetadata(opts)
@@ -227,19 +227,16 @@ async function extractMetadataToJsonFile(opts) {
     if (path.isAbsolute(outputPath)) {
       fs.writeFileSync(outputPath, jsonOutput)
     } else {
-      fs.writeFileSync(path.resolve(__dirname, outputPath), jsonOutput)
+      fs.writeFileSync(path.resolve(dirName, outputPath), jsonOutput)
     }
-    console.log(
-      'Metadata saved as JSON to:',
-      path.resolve(__dirname, outputPath)
-    )
+    console.log('Metadata saved as JSON to:', path.resolve(dirName, outputPath))
 
     if (Object.keys(missingTags).length > 0) {
       try {
         const now = new Date()
         await writeToFile(
           'missing-tags.json',
-          path.resolve(__dirname, outputPath),
+          path.resolve(dirName, outputPath),
           JSON.stringify(missingTags, null, 2),
           false,
           now.getTime() + '-'
