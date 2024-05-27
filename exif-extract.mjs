@@ -7,6 +7,7 @@ import { defaults } from './default-options.mjs'
 import {
   isObject,
   mergeObjects,
+  validateOptions,
   writeToFile,
   writeTagToFile,
   logMissingTag,
@@ -172,12 +173,16 @@ async function processDirectories(
  *
  * @returns {Promise<Number|Object|Error>} A Promise that resolves to 0 if successful or an error object.
  *
+ * @throws {Error} If the provided options are not valid.
  * @throws {Error} If there is an error extracting metadata.
  */
 async function extractMetadata(opts) {
   if (!opts || typeof opts !== 'object') {
     throw new Error('opts must be an object. Received:', opts)
   }
+  // Throw if the provided options are not valid.
+  validateOptions(opts)
+
   const { dirName, srcDir, tagOptions, validExtensions } = mergeObjects(
     defaults,
     opts
