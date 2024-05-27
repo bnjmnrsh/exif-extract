@@ -105,8 +105,7 @@ async function gatherTags(absFilePath, dirName, tagOptions = []) {
   try {
     console.log('Reading:', absFilePath)
 
-    const exiftoolA = new ExifTool({ Struct: 2 })
-    const metadata = await exiftoolA.read(absFilePath) // metadata object from media file
+    const metadata = await exiftool.read(absFilePath) // metadata object from media file
     let filteredMetadata = {}
 
     if (tagOptions.length) {
