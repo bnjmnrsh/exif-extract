@@ -1,8 +1,17 @@
 import fs from 'fs'
-import { exiftool, ExifTool } from 'exiftool-vendored'
 import path from 'path'
+import { exiftool, ExifTool } from 'exiftool-vendored'
 import { error, log } from 'console'
-import { validateOptions } from './helpers.mjs'
+import * as Typedef from './typedefs.mjs'
+import {
+  isObject,
+  mergeObjects,
+  writeToFile,
+  writeTagToFile,
+  logMissingTag,
+  getFiles,
+  missingTags
+} from './helpers.mjs'
 
 /**
  * Extract metadata from images in a directory and return it as an object, or write to file as JSON.
@@ -45,37 +54,9 @@ import { validateOptions } from './helpers.mjs'
  */
 
 /**
- * Type definition for an EXIF tag preference, which may be:
- *      - A string, the EXIF key name. This will simply include the tag value in the output, if it has been populated on the media file.
- *      - An object with the key and value. In this case, if the tag is not populated on the media file, the fallback value will be used if the key is not populated on the media file.
- *      - The value may also optionally be a key, with a val and write boolean. The write boolean is optional and defaults to false.
- *
- * @typedef {Object} ExifTag
- * @property {String | { [key: String]: { val: String, write?: Boolean } | null } } key - A string of EXIF key name, or an object with the key and value. The value may also optionally be a key, with a val and write boolean. The write boolean is optional and defaults to true.
- */
-
-/**
- *  Type definition for user Options.
- *
- * @typedef {Object} Options - The default options.
- * @property {String} Options.srcDir - Relative path of directory to traverse.
- * @property {String} Options.outputPath - The relative path of the directory to write output.
- * @property {String} Options.fileName - The name of the output file with extension.
- * @property {Array.<ExifTag>} Options.exifTags - An array of EXIF tags to extract.
- * @property {Array.<string>} Options.validExtensions - An array of valid media extensions.
- */
-
-/**
- * An array of missing tags per media file.
- *
- * @type {Object.<string, { key: string, val: string }>} - An array of missing tags per media file.
- */
-const missingTags = {}
-
-/**
  * Default options.
  *
- * @type {Options}
+ * @type {Typedef.Options}
  */
 const defaults = {
   __dirname: '',
@@ -87,86 +68,13 @@ const defaults = {
 }
 
 /**
- * Merge one object into another.
- *
- * @param {Options} orig - Original or default object.
- * @param {Options} provided - A provided object.
- *
- *   - __dirname: Absolute path to the relative project directory.
- *   - srcDir: Relative path of directory to traverse.
- *   - outputPath: A relative or absolute path to write JSON output, with filename.
- *   - exifTags: An array of EXIF tags to extract.
- *   - validExtensions: An array of valid media extensions.
- *
- * @returns {Options} A merged object.
- */
-function mergeOptions(orig, provided) {
-  // Throw if provided are not valid.
-  validateOptions(provided)
-
-  const mergedOptions = { ...orig }
-  for (const key in provided) {
-    if (provided.hasOwnProperty(key)) {
-      mergedOptions[key] = provided[key]
-    }
-  }
-
-  return mergedOptions
-}
-
-/**
- * Helper to check if a value is an object.
- *
- * @param {*} value - The value to check.
- * @returns {Boolean} True if the value is an object, false otherwise.
- */
-function isObject(value) {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
-
-/**
- * Function to recursively traverse directories and return an array of all files that match any of the provided extensions.
- *
- * @param {String} dir - Absolute path of directory to traverse.
- * @param @param {Array.<String>} extensions - An array of valid extensions
- * @param @param {Array.<String>} filesList - An optional array of files
- *
- * @returns {Promise<Array.<Object>>} - The array of files
- */
-async function getFiles(dir, extensions, filesList = []) {
-  try {
-    const files = await fs.promises.readdir(dir)
-    for (const file of files) {
-      if (file.startsWith('.')) {
-        continue // Skip invisible files
-      }
-
-      const filePath = path.join(dir, file)
-      const stat = await fs.promises.stat(filePath)
-
-      if (stat.isDirectory()) {
-        await getFiles(filePath, extensions, filesList)
-      } else {
-        const fileExtension = path.extname(filePath).toLowerCase()
-        if (extensions.includes(fileExtension)) {
-          filesList.push(filePath)
-        }
-      }
-    }
-    return filesList
-  } catch (error) {
-    console.error(error) // Log the error
-    throw new Error(`Error reading directory: ${dir}`, error)
-  }
-}
-
-/**
  * Function to traverse each file in a directory and extract tag metadata.
  * Allows for parallel processing of images by mapping over files and collecting the promises, and using Promise.allSettled
  *
+ *
  * @param {String} dir
  * @param {String} __dirname
- * @param {Array.<ExifTag>} exifTags
+ * @param {Array.<Typedef.ExifTag>} exifTags
  * @param {Array.<string>} allowedMediaFileExtensions
  *
  * @returns {Promise<Array>} Array of objects with EXIF metadata from each media file.
@@ -196,60 +104,7 @@ async function processDirectories(
 }
 
 /**
- * Writes a tag and its value to a file.
- *
- * @param {String} absFilePath - The absolute path of the file.
- * @param {String} tag - The tag to write.
- * @param {String} val - The value of the tag.
- *
- * @return {Promise<void>} A promise that resolves when the tag is successfully written to the file, or rejects with an error if there was a problem.
- */
-async function writeTagToFile(absFilePath, tag, val) {
-  try {
-    await fs.promises.access(absFilePath, fs.constants.W_OK)
-  } catch (error) {
-    if (error.code === 'ENOENT') {
-      throw new Error(`File does not exist: ${absFilePath}`)
-    } else if (error.code === 'EACCES') {
-      throw new Error(`File is not writable: ${absFilePath}`, error)
-    } else {
-      throw error
-    }
-  }
-  try {
-    console.log(
-      `-- exiftool writing: ${tag} : ${val} \n   to file: ${absFilePath}` // fires
-    )
-    const result = await exiftool.write(absFilePath, { [tag]: val })
-    console.warn(`-- exiftool reports: ${JSON.stringify(result)}`)
-  } catch (error) {
-    console.error('-- exiftool write error:', error)
-    throw error
-  }
-}
-
-/**
- * Extracts the file name from the absolute file path, constructs an error object with the file name as key, and pushes it to the tagErrors array.
- *
- * @param {String} absFilePath - The absolute file path.
- * @param {String} tag - The missing exif tag.
- * @param {String} val - The default value for the missing exif tag.
- *
- * @return {Void} This function does not return a value.
- */
-function logMissingTag(absFilePath, tag, val) {
-  // extract the file name from absFilePath
-  const fileName = path.basename(absFilePath)
-
-  if (!missingTags[fileName]) {
-    missingTags[fileName] = {}
-  }
-  // push to the missingTags array
-  missingTags[fileName][tag] = val
-}
-
-/**
- * Filters the metadata object by collecting the provided EXIF tags from an image's metadata.
+ * Filters the metadata object by gathering only the desired EXIF tags from an image's metadata.
  *
  * @param {string} absFilePath - The absolute path to the media file.
  * @param {string} __dirname - The absolute path to the project directory.
@@ -320,71 +175,9 @@ async function gatherTags(absFilePath, __dirname, exifTags = []) {
 }
 
 /**
- * Writes a file to disk.
- * Warning will overwrite any existing file of the same name.
- *
- * @param {string} fileName - The name of the file.
- * @param {string} filePath - The path to the file to write.
- * @param {string} writeValue - The value to write to the file.
- * @param {boolean} [fileAppend=false] - A boolean indicating whether to append the writeValue to the file.
- * @param {string} [fileNamePrepend=null] - An optional string to prepend to the file name.
- *
- * @returns {Promise<void>} A promise that resolves when the file is written.
- *
- * @throws {TypeError} If writeValue is not a string.
- * @throws {TypeError} If the filePath is not a string.
- * @throws {TypeError} If the fileName is not a string.
- * @throws {TypeError} If the filePath is not writable.
- * @throws {TypeError} If fileNamePrepend is not a string.
- */
-async function writeToFile(
-  fileName,
-  filePath,
-  writeValue,
-  fileAppend = false,
-  fileNamePrepend = null
-) {
-  if (typeof writeValue !== 'string') {
-    throw new TypeError('writeValue must be a string')
-  }
-  if (typeof filePath !== 'string') {
-    throw new TypeError('filePath must be a string')
-  }
-  if (typeof fileName !== 'string') {
-    throw new TypeError('fileName must be a string')
-  }
-  if (typeof fileAppend !== 'boolean') {
-    throw new TypeError('fileAppend must be a boolean')
-  }
-  if (fileNamePrepend !== null && typeof fileNamePrepend !== 'string') {
-    throw new TypeError('fileNamePrepend must be a string')
-  }
-
-  const newFileName = fileNamePrepend
-    ? `${fileNamePrepend}${fileName}`
-    : fileName
-  const newFilePath = path.join(path.dirname(filePath), newFileName)
-
-  try {
-    await fs.promises.access(filePath, fs.constants.W_OK)
-  } catch (error) {
-    if (error.code === 'EACCES') {
-      throw new Error(`File is not writable: ${filePath}`, error)
-    }
-    throw error
-  }
-
-  if (fileAppend) {
-    await fs.promises.appendFile(newFilePath, writeValue)
-  } else {
-    await fs.promises.writeFile(newFilePath, writeValue)
-  }
-}
-
-/**
  * Extract metadata from images in a directory and return it as an object.
  *
- * @param {Options} opts - An options object containing the following properties:
+ * @param {Typedef.Options} opts - An options object containing the following properties:
  *   - __dirname: Absolute path to the relative project directory.
  *   - srcDir: Relative path of directory to traverse.
  *   - outputPath: A relative or absolute path to write JSON output, with filename.
@@ -399,7 +192,7 @@ async function extractMetadata(opts) {
   if (!opts || typeof opts !== 'object') {
     throw new Error('opts must be an object. Received:', opts)
   }
-  const { __dirname, srcDir, exifTags, validExtensions } = mergeOptions(
+  const { __dirname, srcDir, exifTags, validExtensions } = mergeObjects(
     defaults,
     opts
   )
@@ -427,7 +220,7 @@ async function extractMetadata(opts) {
 /**
  * Extract metadata from images in a directory and save it to a JSON file.
  *
- * @param {Options} opts - An options object containing the following properties:
+ * @param {Typedef.Options} opts - An options object containing the following properties:
  *   - __dirname: Absolute path to the relative project directory.
  *   - srcDir: Relative path of directory to traverse.
  *   - outputPath: A relative or absolute path to write JSON output, with filename.
@@ -438,7 +231,7 @@ async function extractMetadata(opts) {
  */
 async function extractMetadataToJsonFile(opts) {
   const { __dirname, srcDir, exifTags, validExtensions, outputPath } =
-    mergeOptions(defaults, opts)
+    mergeObjects(defaults, opts)
   try {
     const metadata = await extractMetadata(opts)
     const jsonOutput = JSON.stringify(metadata, null, 2)
