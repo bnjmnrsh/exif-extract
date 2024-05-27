@@ -6,10 +6,10 @@ import * as typedefs from './typedefs.mjs'
  * @type {typedefs.Options}
  */
 export const defaults = {
-  __dirname: '',
+  dirName: '',
   srcDir: '',
   outputPath: '',
   fileName: 'metadata.json',
-  exifTags: [],
+  tagOptions: [],
   validExtensions: ['.jpg', '.jpeg']
 }
