@@ -3,6 +3,7 @@ import path from 'path'
 import { exiftool, ExifTool } from 'exiftool-vendored'
 import { error, log } from 'console'
 import * as typedefs from './typedefs.mjs'
+import { defaults } from './default-options.mjs'
 import {
   isObject,
   mergeObjects,
@@ -52,20 +53,6 @@ import {
  * @todo due to the the assymmetry of 'flattened' tags  --- a write action on one of these tags will always overwrite the origional value.
  * --- This is due to the flattened tag acting only as setter and not as a getter. Therefore the 'write' option will always be true due to the null check.
  */
-
-/**
- * Default options.
- *
- * @type {Typedef.Options}
- */
-const defaults = {
-  __dirname: '',
-  srcDir: '',
-  outputPath: '',
-  fileName: 'metadata.json',
-  exifTags: [],
-  validExtensions: ['.jpg', '.jpeg']
-}
 
 /**
  * Function to traverse each file in a directory and extract tag metadata.
