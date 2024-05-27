@@ -43,7 +43,9 @@ function checkPathPermisions(filePath, opts) {
       if (err) {
         console.error(`${path.dirname(filePath)} is not writable`)
         throw new Error(
-          `${keyName} is not a valid path or you don't have the correct permissions? Received: ${path}`
+          `${keyName} is not a valid path or you don't have the correct permissions? Received: ${JSON.stringify(
+            filePath
+          )}`
         )
       } else {
         return true
