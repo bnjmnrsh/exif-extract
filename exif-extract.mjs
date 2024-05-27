@@ -55,42 +55,6 @@ import {
  */
 
 /**
- * Function to traverse each file in a directory and extract tag metadata.
- * Allows for parallel processing of images by mapping over files and collecting the promises, and using Promise.allSettled
- *
- *
- * @param {String} dir
- * @param {String} dirName - Absolute path to the project directory.
- * @param {Array.<typedefs.TagOpts>} tagOptions
- * @param {Array.<string>} allowedMediaFileExtensions
- *
- * @returns {Promise<Array>} Array of objects with EXIF metadata from each media file.
- */
-async function processDirectories(
-  dir,
-  dirName,
-  tagOptions,
-  allowedMediaFileExtensions
-) {
-  const files = await getFiles(dir, allowedMediaFileExtensions)
-
-  if (files.length === 0) {
-    throw new Error(`No media files found in ${dir}`)
-  }
-  const metadataPromises = files.map(
-    async (file) => await gatherTags(file, dirName, tagOptions)
-  )
-  try {
-    const metadataList = await Promise.allSettled(metadataPromises)
-    // Filter out any potential empty values
-    return metadataList.filter(Boolean).map((result) => result.value)
-  } catch (err) {
-    console.error(err)
-    throw err
-  }
-}
-
-/**
  * Filters the metadata object by gathering only the desired EXIF tags from an image's metadata.
  *
  * @param {string} absFilePath - The absolute path to the media file.
@@ -157,6 +121,42 @@ async function gatherTags(absFilePath, dirName, tagOptions = []) {
     console.error(`Error reading metadata for ${absFilePath}:`, error)
     await exiftool.end()
     throw new Error(`Error reading metadata for ${absFilePath}:`, error)
+  }
+}
+
+/**
+ * Function to traverse each file in a directory and extract tag metadata.
+ * Allows for parallel processing of images by mapping over files and collecting the promises, and using Promise.allSettled
+ *
+ *
+ * @param {String} dir
+ * @param {String} dirName - Absolute path to the project directory.
+ * @param {Array.<typedefs.TagOpts>} tagOptions
+ * @param {Array.<string>} allowedMediaFileExtensions
+ *
+ * @returns {Promise<Array>} Array of objects with EXIF metadata from each media file.
+ */
+async function processDirectories(
+  dir,
+  dirName,
+  tagOptions,
+  allowedMediaFileExtensions
+) {
+  const files = await getFiles(dir, allowedMediaFileExtensions)
+
+  if (files.length === 0) {
+    throw new Error(`No media files found in ${dir}`)
+  }
+  const metadataPromises = files.map(
+    async (file) => await gatherTags(file, dirName, tagOptions)
+  )
+  try {
+    const metadataList = await Promise.allSettled(metadataPromises)
+    // Filter out any potential empty values
+    return metadataList.filter(Boolean).map((result) => result.value)
+  } catch (err) {
+    console.error(err)
+    throw err
   }
 }
 
