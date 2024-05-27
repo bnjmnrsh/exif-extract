@@ -61,7 +61,7 @@ import {
  *
  * @param {String} dir
  * @param {String} __dirname
- * @param {Array.<typedefs.ExifTag>} exifTags
+ * @param {Array.<typedefs.TagOpts>} exifTags
  * @param {Array.<string>} allowedMediaFileExtensions
  *
  * @returns {Promise<Array>} Array of objects with EXIF metadata from each media file.
