@@ -1,8 +1,12 @@
 export default [
   {
-    extends: ['plugin:@typescript-eslint/recommended'],
+    extends: [
+      'plugin:@typescript-eslint/recommended',
+      'plugin:jsdoc/recommended-typescript-flavor-error'
+    ],
     ignores: ['**/node_modules'],
     parser: '@typescript-eslint/parser',
+    plugins: ['jsdoc'],
     rules: {
       '@typescript-eslint/no-unused-vars': 'error',
       'no-useless-assignment': 'error',
