@@ -1,6 +1,7 @@
+import * as typedefs from './typedefs.mjs'
+import { defaults } from './default-options.mjs'
 import fs from 'fs'
 import path from 'path'
-import * as typedefs from './typedefs.mjs'
 
 /**
  * Helper to check if a value is an object.
@@ -117,10 +118,10 @@ function validateOptions(opts) {
 }
 
 /**
- * Merge one object into another, while ensuring only keys in the original are assigned.
+ * Merge properties from the right-hand object into the left-hand object, but only if those properties already exist in the left-hand object.
  *
- * @param {typedefs.Options} orig - Original or default object.
- * @param {typedefs.Options} provided - A provided object.
+ * @param {Object} obj1 - Original or default object.
+ * @param {Object} obj2 - A provided object.
  *
  *   - dirName: The absolute path to the project directory.
  *   - srcDir: Relative path of directory to traverse.
@@ -128,17 +129,30 @@ function validateOptions(opts) {
  *   - tagOptions: An array of EXIF tags to extract.
  *   - validExtensions: An array of valid media extensions.
  *
- * @returns {typedefs.Options} A merged object.
+ * @returns {Object} A merged object.
  */
-function mergeObjects(orig, provided) {
-  const merged = { ...orig }
-  for (const key in orig) {
+function conditionalRightHandMerge(obj1, obj2) {
+  const merged = { ...obj1 }
+  for (const key in obj1) {
     // only assign values for keys that exist in original object.
-    if (provided.hasOwnProperty(key)) {
-      merged[key] = provided[key]
+    if (obj2.hasOwnProperty(key)) {
+      merged[key] = obj2[key]
     }
   }
   return merged
+}
+
+/**
+ * Merge project defaults with user provided options.
+ *
+ * @param {typedefs.Options}
+ * @returns {typedefs.Options} A merged options object.
+ */
+function mergeOptions(options) {
+  const merged = conditionalRightHandMerge(defaults, options)
+
+  // Throws if the provided options are not valid.
+  return validateOptions(merged)
 }
 
 /**
@@ -301,7 +315,8 @@ function logMissingTag(absFilePath, tag, val) {
 
 export {
   isObject,
-  mergeObjects,
+  mergeOptions,
+  conditionalRightHandMerge,
   validateOptions,
   writeTagToFile,
   logMissingTag,
