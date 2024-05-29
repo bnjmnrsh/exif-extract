@@ -131,7 +131,7 @@ async function extractMetadataToJsonFile(opts) {
           path.resolve(dirName, outputPath),
           JSON.stringify(missingTags, null, 2),
           false,
-          now.getTime() + '-'
+          `${now.getTime()}-`
         )
       } catch (error) {
         console.error('Error writing missing tags log:', error)
