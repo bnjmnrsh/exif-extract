@@ -1,9 +1,10 @@
 export default [
   {
-    extends: ['eslint:recommended'],
+    extends: ['plugin:@typescript-eslint/recommended'],
     ignores: ['**/node_modules'],
+    parser: '@typescript-eslint/parser',
     rules: {
-      'no-unused-vars': ['error', { argsIgnorePattern: '^typedefs' }],
+      '@typescript-eslint/no-unused-vars': 'error',
       'no-useless-assignment': 'error',
       'no-useless-concat': 'error',
       'no-useless-return': 'error',
