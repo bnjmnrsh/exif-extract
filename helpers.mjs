@@ -58,7 +58,7 @@ function checkPathPermisions(filePath, opts) {
 }
 
 /**
- *  Validate options. Throws if the options object is not formed correctly.
+ *  Validate options. Throws if the options object is not formed correctly, or returns the validated options object.
  *
  * @param {typedefs.Options} opts - An options object containing the following properties:
  *   - dirName: The absolute path to the project directory.
@@ -67,7 +67,7 @@ function checkPathPermisions(filePath, opts) {
  *   - tagOptions: An array of EXIF tags to extract.
  *   - validExtensions: An array of valid media extensions.
  *
- * @returns {Void}
+ * @returns {typedefs.Options} opts
  *
  * @throws {Error} Throws an error if the options object is missing or not an object.
  * @throws {Error} Throws an error if the dirName, srcDir, or outputPath property is missing or invalid.
