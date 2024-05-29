@@ -1,19 +1,14 @@
+// eslint-disable-next-line no-unused-vars
+import * as typedefs from './typedefs.mjs'
+import {
+  mergeOptions,
+  missingTags,
+  validateOptions,
+  writeToFile
+} from './helpers.mjs'
 import fs from 'fs'
 import path from 'path'
-import { exiftool, ExifTool } from 'exiftool-vendored'
-import { error, log } from 'console'
-import * as typedefs from './typedefs.mjs'
-import { defaults } from './default-options.mjs'
-import {
-  isObject,
-  mergeObjects,
-  validateOptions,
-  writeToFile,
-  writeTagToFile,
-  logMissingTag,
-  getFiles,
-  missingTags
-} from './helpers.mjs'
+import { processDirectories } from './logic.mjs'
 
 /**
  * Extract metadata from images in a directory and return it as an object, or write to file as JSON.
