@@ -1,4 +1,3 @@
-// eslint-disable-next-line no-unused-vars
 import * as typedefs from './typedefs.mjs'
 import {
   mergeOptions,
