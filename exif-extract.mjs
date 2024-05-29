@@ -72,10 +72,8 @@ async function extractMetadata(opts) {
   // Throw if the provided options are not valid.
   validateOptions(opts)
 
-  const { dirName, srcDir, tagOptions, validExtensions } = mergeObjects(
-    defaults,
-    opts
-  )
+  // Merge the provided options with the default options.
+  const { dirName, srcDir, tagOptions, validExtensions } = mergeOptions(opts)
 
   try {
     const metadataList = await processDirectories(
