@@ -108,8 +108,9 @@ async function extractMetadata(opts) {
  * @returns {Promise<Object|Error>} A Promise that resolves to an object with the extracted metadata or an error object.
  */
 async function extractMetadataToJsonFile(opts) {
-  const { dirName, srcDir, tagOptions, validExtensions, outputPath } =
-    mergeObjects(defaults, opts)
+  // Throw if the provided options are not valid.
+  const { dirName, outputPath } = mergeOptions(opts)
+
   try {
     const metadata = await extractMetadata(opts)
     const jsonOutput = JSON.stringify(metadata, null, 2)
