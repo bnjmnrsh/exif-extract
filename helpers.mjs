@@ -31,7 +31,7 @@ function isObject(value) {
 function checkPathPermisions(filePath, opts) {
   try {
     // Get the key name as a string
-    const keyName = Object.entries(opts).find(([k, v]) => v === filePath)?.[0]
+    const keyName = Object.entries(opts).find(([, v]) => v === filePath)?.[0]
 
     if (!filePath || typeof filePath !== 'string') {
       throw new Error(
