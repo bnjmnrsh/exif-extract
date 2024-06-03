@@ -172,40 +172,40 @@ See [exiftool-vendored Performance](https://github.com/photostructure/exiftool-v
 This table documents the EXIF keys populated by Adobe Bridge's 'IPTC CORE' metadata fields as extracted using `exiftool-vendored`.
 EXIF tag names are [PascalCased](https://photostructure.github.io/exiftool-vendored.js/index.html#md:tags), while compound or prefixed tags must be set in quotes e.g. `'XMP-xmpRights:Marked'`.
 
-| ADOBE BRIDGE FIELD                   | EXIFTOOL KEYS (JPEG)                                                           | ASYMMETRICAL TAGS / RESULTS              |
-| ------------------------------------ | ------------------------------------------------------------------------------ | ---------------------------------------- |
-| Creator                              | `Creator<Array>`                                                               | `Artist<String>`, `By-line<String>`      |
-| Creator: Job Title                   | `AuthorsPosition<String>`, `By-lineTitle<String>`                              | n/a                                      |
-| Creator: Address                     | `CreatorAddress<String>`, `CreatorContactInfo<String>`, `CiAdrExtadr<String>`, | `CreatorContactInfo.CiAdrCity<String>`   |
-| Creator: City                        | `CreatorCity<String>`                                                          | `CreatorContactInfo.CiAdrCity<String>`   |
-| Creator: State/Province              | `CreatorRegion<String>`                                                        | `CreatorContactInfo.CiAdrRegion<String>` |
-| Creator: Postal Code                 | `CreatorPostalCode<String>`                                                    | `CreatorContactInfo.CiAdrPcode<String>`  |
-| Creator: Country                     | `CreatorCountry<String>`                                                       | `CreatorContactInfo.CiAdrCtry<String>`   |
-| Creator: Phone(s)                    | `CreatorWorkTelephone<String>`                                                 | `CreatorContactInfo.CiTelWork<String>`   |
-| Creator: Email(s)                    | `CreatorWorkEmail<String>`                                                     | `CreatorContactInfo.CiEmailWork<String>` |
-| Creator: Website(s)                  | `CreatorWorkURL<String>`,                                                      | `CreatorContactInfo.CiUrlWork<String>`   |
-| Headline                             | `Headline<String>`                                                             | n/a                                      |
-| Description                          | `Description<String>`, `Caption-Abstract<String>`                              | n/a                                      |
-| Alt Text (accessibility)             | `AltTextAccessibility<String>`                                                 | n/a                                      |
-| Extended Description (accessibility) | `ExtDescrAccessibility<String>`                                                | n/a                                      |
-| Keywords †                           | `Subject<Array>`                                                               | `Keywords<String>`                       |
-| IPTC Subject Code                    | `SubjectCode<String>`                                                          | n/a                                      |
-| Description Writer                   | `CaptionWriter<String>`                                                        | n/a                                      |
-| Date Created                         | `DateCreated<String><Object>`                                                  | n/a                                      |
-| Intellectual Genre                   | `IntellectualGenre<String>`                                                    | n/a                                      |
-| IPTC Scene Code                      | `Scene<String>`                                                                | n/a                                      |
-| City                                 | `City<String>`                                                                 | n/a                                      |
-| State/Province                       | `State<String>`, `Province-State<String>`                                      | n/a                                      |
-| Country                              | `Country<String>`, `Country-PrimaryLocationName<String>`                       | n/a                                      |
-| ISO COUNTRY CODE                     | `CountryCode<String>`, `Country-PrimaryLocationCode<String>`                   | n/a                                      |
-| Title                                | `ObjectName<String>`                                                           | n/a                                      |
-| Job Identifier                       | `TransmissionReference<String>`, `OriginalTransmissionReference<String>`       | n/a                                      |
-| Instructions                         | `Instructions<String>`, `SpecialInstructions<String>`                          | n/a                                      |
-| Credit Line                          | `Credit<String>`                                                               | n/a                                      |
-| Source                               | `Source<String>`                                                               | n/a                                      |
-| Copyright Notice                     | `CopyrightNotice<String>`, `Rights<String>`, `Copyright<String>`               | n/a                                      |
-| Copyright Status ††                  | `XMP-xmpRights:Marked<String('true'\|'false')\|Number(1\|0) \| null>`          | `CopyrightFlag<Boolean\|null>`           |
-| Rights Usage Terms                   | `UsageTerms<String>`, `'xmp:usageterms'<String>`                               | n/a                                      |
+| ADOBE BRIDGE FIELD                   | EXIFTOOL KEYS (JPEG)                                                     | ASYMMETRICAL TAGS / RESULTS              |
+| ------------------------------------ | ------------------------------------------------------------------------ | ---------------------------------------- |
+| Creator                              | `Creator<Array>`                                                         | `Artist<String>`, `By-line<String>`      |
+| Creator: Job Title                   | `AuthorsPosition<String>`, `By-lineTitle<String>`                        | n/a                                      |
+| Creator: Address                     | `CreatorAddress<String>`,                                                | `CreatorContactInfo.CiAdrExtadr<String>` |
+| Creator: City                        | `CreatorCity<String>`                                                    | `CreatorContactInfo.CiAdrCity<String>`   |
+| Creator: State/Province              | `CreatorRegion<String>`                                                  | `CreatorContactInfo.CiAdrRegion<String>` |
+| Creator: Postal Code                 | `CreatorPostalCode<String>`                                              | `CreatorContactInfo.CiAdrPcode<String>`  |
+| Creator: Country                     | `CreatorCountry<String>`                                                 | `CreatorContactInfo.CiAdrCtry<String>`   |
+| Creator: Phone(s)                    | `CreatorWorkTelephone<String>`                                           | `CreatorContactInfo.CiTelWork<String>`   |
+| Creator: Email(s)                    | `CreatorWorkEmail<String>`                                               | `CreatorContactInfo.CiEmailWork<String>` |
+| Creator: Website(s)                  | `CreatorWorkURL<String>`,                                                | `CreatorContactInfo.CiUrlWork<String>`   |
+| Headline                             | `Headline<String>`                                                       | n/a                                      |
+| Description                          | `Description<String>`, `Caption-Abstract<String>`                        | n/a                                      |
+| Alt Text (accessibility)             | `AltTextAccessibility<String>`                                           | n/a                                      |
+| Extended Description (accessibility) | `ExtDescrAccessibility<String>`                                          | n/a                                      |
+| Keywords †                           | `Subject<Array>`                                                         | `Keywords<String>`                       |
+| IPTC Subject Code                    | `SubjectCode<String>`                                                    | n/a                                      |
+| Description Writer                   | `CaptionWriter<String>`                                                  | n/a                                      |
+| Date Created                         | `DateCreated<String><Object>`                                            | n/a                                      |
+| Intellectual Genre                   | `IntellectualGenre<String>`                                              | n/a                                      |
+| IPTC Scene Code                      | `Scene<String>`                                                          | n/a                                      |
+| City                                 | `City<String>`                                                           | n/a                                      |
+| State/Province                       | `State<String>`, `Province-State<String>`                                | n/a                                      |
+| Country                              | `Country<String>`, `Country-PrimaryLocationName<String>`                 | n/a                                      |
+| ISO COUNTRY CODE                     | `CountryCode<String>`, `Country-PrimaryLocationCode<String>`             | n/a                                      |
+| Title                                | `ObjectName<String>`                                                     | n/a                                      |
+| Job Identifier                       | `TransmissionReference<String>`, `OriginalTransmissionReference<String>` | n/a                                      |
+| Instructions                         | `Instructions<String>`, `SpecialInstructions<String>`                    | n/a                                      |
+| Credit Line                          | `Credit<String>`                                                         | n/a                                      |
+| Source                               | `Source<String>`                                                         | n/a                                      |
+| Copyright Notice                     | `CopyrightNotice<String>`, `Rights<String>`, `Copyright<String>`         | n/a                                      |
+| Copyright Status ††                  | `XMP-xmpRights:Marked<String('true'\|'false')\|Number(1\|0) \| null>`    | `CopyrightFlag<Boolean\|null>`           |
+| Rights Usage Terms                   | `UsageTerms<String>`, `'xmp:usageterms'<String>`                         | n/a                                      |
 
 † The `Keywords` key is unavailable on MP3 and assumably MPG-1 MPG-2; use `Subject` instead (or both) for greater portability.
 
