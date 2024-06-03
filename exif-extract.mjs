@@ -86,11 +86,11 @@ async function extractMetadata(opts) {
     if (missingTags.length > 0) {
       console.error('Missing metadata:', missingTags)
     }
-    await exiftool.end()
+    await exifExtract.end()
     return Promise.resolve(metadataList) // Return the metadataList;
   } catch (error) {
     console.error('Error extracting metadata:', error)
-    await exiftool.end()
+    await exifExtract.end()
     throw error
   }
 }
