@@ -1,13 +1,14 @@
-import * as typedefs from './typedefs.mjs'
+import * as typedefs from './modules/typedefs.mjs'
 import {
   mergeOptions,
   missingTags,
   validateOptions,
   writeToFile
-} from './helpers.mjs'
+} from './modules/helpers.mjs'
 import fs from 'fs'
 import path from 'path'
-import { processDirectories } from './logic.mjs'
+import { processDirectories } from './modules/logic.mjs'
+import { exifExtract } from './modules/exiftool-instance.mjs'
 
 /**
  * Extract metadata from images in a directory and return it as an object, or write to file as JSON.

@@ -115,6 +115,8 @@ function validateOptions(opts) {
       JSON.stringify(opts.validExtensions)
     )
   }
+
+  return opts
 }
 
 /**
@@ -152,7 +154,8 @@ function mergeOptions(options) {
   const merged = conditionalRightHandMerge(defaults, options)
 
   // Throws if the provided options are not valid.
-  return validateOptions(merged)
+  validateOptions(merged)
+  return merged
 }
 
 /**

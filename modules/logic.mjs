@@ -1,6 +1,6 @@
 import * as typedefs from './typedefs.mjs'
 import { getFiles, isObject, logMissingTag } from './helpers.mjs'
-import { exiftool } from 'exiftool-vendored'
+import { exifExtract } from './exiftool-instance.mjs'
 import path from 'path'
 
 /**
@@ -18,7 +18,7 @@ async function gatherTags(absFilePath, dirName, tagOptions = []) {
   try {
     console.log('Reading:', absFilePath)
 
-    const metadata = await exiftool.read(absFilePath) // metadata object from media file
+    const metadata = await exifExtract.read(absFilePath) // metadata object from media file
     let filteredMetadata = {}
 
     if (tagOptions.length) {
@@ -68,7 +68,7 @@ async function gatherTags(absFilePath, dirName, tagOptions = []) {
     return filteredMetadata
   } catch (error) {
     console.error(`Error reading metadata for ${absFilePath}:`, error)
-    await exiftool.end()
+    await exifExtract.end()
     throw new Error(`Error reading metadata for ${absFilePath}:`, error)
   }
 }
