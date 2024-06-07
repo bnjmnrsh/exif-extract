@@ -2,7 +2,8 @@ export default [
   {
     extends: [
       'plugin:@typescript-eslint/recommended',
-      'plugin:jsdoc/recommended-typescript-flavor-error'
+      'plugin:jsdoc/recommended-typescript-flavor-error',
+      'plugin:import/recommended'
     ],
     ignores: ['**/node_modules'],
     parser: '@typescript-eslint/parser',
