@@ -13,7 +13,7 @@
   "author": "bnjmnrsh",
   "license": "ISC",
   "dependencies": {
-    "exiftool-vendored": "^26.1.0"
+    "exiftool-vendored": "^26.2.0"
   },
   "devDependencies": {
     "eslint-plugin-jsdoc": "^48.2.7",
