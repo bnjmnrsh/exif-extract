@@ -7,14 +7,14 @@ import path from 'path'
  * Filters the metadata object by gathering only the desired EXIF tags from an image's metadata.
  *
  * @param {string} absFilePath - The absolute path to the media file.
- * @param {string} dirName - The absolute path to the project directory.
+ * @param {string} rootDir - The absolute path to the project directory.
  * @param {Array.<string|Object>} [tagOptions=[]] - The EXIF tags to filter.
  *
  * @returns {Promise<Object|Error>} - The filtered metadata object or an error.
  *
  * @throws {Error} - If there is an error reading the metadata.
  */
-async function gatherTags(absFilePath, dirName, tagOptions = []) {
+async function gatherTags(absFilePath, rootDir, tagOptions = []) {
   try {
     console.log('Reading:', absFilePath)
 
@@ -60,9 +60,9 @@ async function gatherTags(absFilePath, dirName, tagOptions = []) {
       // We've not passed a filter so return all metadata.
       filteredMetadata = metadata
     }
-    filteredMetadata.SourceFile = path.relative(dirName, absFilePath)
+    filteredMetadata.SourceFile = path.relative(rootDir, absFilePath)
     filteredMetadata.Directory = path.relative(
-      dirName,
+      rootDir,
       path.dirname(absFilePath)
     )
     return filteredMetadata
@@ -79,7 +79,7 @@ async function gatherTags(absFilePath, dirName, tagOptions = []) {
  *
  *
  * @param {String} dir
- * @param {String} dirName - Absolute path to the project directory.
+ * @param {String} rootDir - Absolute path to the project directory.
  * @param {Array.<typedefs.TagOpts>} tagOptions
  * @param {Array.<string>} allowedMediaFileExtensions
  *
@@ -87,7 +87,7 @@ async function gatherTags(absFilePath, dirName, tagOptions = []) {
  */
 async function processDirectories(
   dir,
-  dirName,
+  rootDir,
   tagOptions,
   allowedMediaFileExtensions
 ) {
@@ -97,7 +97,7 @@ async function processDirectories(
     throw new Error(`No media files found in ${dir}`)
   }
   const metadataPromises = files.map(
-    async (file) => await gatherTags(file, dirName, tagOptions)
+    async (file) => await gatherTags(file, rootDir, tagOptions)
   )
   try {
     const metadataList = await Promise.allSettled(metadataPromises)

@@ -18,7 +18,7 @@ function isObject(value) {
  *
  * @param {String} filePath - The path to check for write-ability.
  * @param {typedefs.Options} opts - An options object containing the following properties:
- *   - dirName: The absolute path to the project directory.
+ *   - rootDir: The absolute path to the project directory.
  *   - srcDir: Relative path of directory to traverse.
  *   - outputPath: A relative or absolute path to write JSON output, with filename.
  *   - tagOptions: An array of EXIF tags to extract.
@@ -61,7 +61,7 @@ function checkPathPermisions(filePath, opts) {
  *  Validate options. Throws if the options object is not formed correctly, or returns the validated options object.
  *
  * @param {typedefs.Options} opts - An options object containing the following properties:
- *   - dirName: The absolute path to the project directory.
+ *   - rootDir: The absolute path to the project directory.
  *   - srcDir: Relative path of directory to traverse.
  *   - outputPath: A relative or absolute path to write JSON output, with filename.
  *   - tagOptions: An array of EXIF tags to extract.
@@ -70,36 +70,36 @@ function checkPathPermisions(filePath, opts) {
  * @returns {typedefs.Options} opts
  *
  * @throws {Error} Throws an error if the options object is missing or not an object.
- * @throws {Error} Throws an error if the dirName, srcDir, or outputPath property is missing or invalid.
+ * @throws {Error} Throws an error if the rootDir, srcDir, or outputPath property is missing or invalid.
  * @throws {Error} Throws an error if the tagOptions property is present but not an array.
  * @throws {Error} Throws an error if the validExtensions property is present but not an array.
  */
 function validateOptions(opts) {
   if (!opts || typeof opts !== 'object') {
     throw new Error(
-      'You must pass an options object minimally containing: "dirName", "srcDir", and "outputPath" properties. Instead Received:',
+      'You must pass an options object minimally containing: "rootDir", "srcDir", and "outputPath" properties. Instead Received:',
       opts
     )
   }
   // validate required properties are present
-  if (!opts.dirName || !opts.srcDir || !opts.outputPath) {
+  if (!opts.rootDir || !opts.srcDir || !opts.outputPath) {
     throw new Error(
-      'You must pass an options object minimally containing: "dirName", "srcDir", and "outputPath" properties.'
+      'You must pass an options object minimally containing: "rootDir", "srcDir", and "outputPath" properties.'
     )
   }
 
-  // Validate dirName is a valid path
-  checkPathPermisions(opts.dirName, opts)
+  // Validate rootDir is a valid path
+  checkPathPermisions(opts.rootDir, opts)
 
   // Validate srcDir is a valid path
   checkPathPermisions(opts.srcDir, opts)
 
-  // outputPath may be a relative path so check last as it needs a valid opts.dirName to compute.
+  // outputPath may be a relative path so check last as it needs a valid opts.rootDir to compute.
   if (path.isAbsolute(opts.outputPath)) {
     console.log('outputPath is absolute:', opts.outputPath)
     checkPathPermisions(opts.outputPath, opts)
   } else {
-    const resolvedpath = path.resolve(opts.dirName, opts.outputPath)
+    const resolvedpath = path.resolve(opts.rootDir, opts.outputPath)
     checkPathPermisions(resolvedpath, opts)
   }
   // validate optional properties
@@ -125,7 +125,7 @@ function validateOptions(opts) {
  * @param {Object} obj1 - Original or default object.
  * @param {Object} obj2 - A provided object.
  *
- *   - dirName: The absolute path to the project directory.
+ *   - rootDir: The absolute path to the project directory.
  *   - srcDir: Relative path of directory to traverse.
  *   - outputPath: A relative or absolute path to write JSON output, with filename.
  *   - tagOptions: An array of EXIF tags to extract.

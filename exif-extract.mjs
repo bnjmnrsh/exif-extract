@@ -26,7 +26,7 @@ import { exifExtract } from './modules/exiftool-instance.mjs'
  * @see https://exiftool.org/#links
  * @see https://exiftool.org/TagNames/
  *
- * // Common tags
+ * Common tags
  * @see https://exiftool.org/TagNames/EXIF.html
  * @see https://exiftool.org/TagNames/XMP.html
  * @see https://exiftool.org/TagNames/IPTC.html
@@ -54,7 +54,7 @@ import { exifExtract } from './modules/exiftool-instance.mjs'
  * Extract metadata from images in a directory and return it as an object.
  *
  * @param {typedefs.Options} opts - An options object containing the following properties:
- *   - dirName: The absolute path to the project directory.
+ *   - rootDir: The absolute path to the project directory.
  *   - srcDir: Relative path of directory to traverse.
  *   - outputPath: A relative or absolute path to write JSON output, with filename.
  *   - tagOptions: An array of EXIF tags to extract.
@@ -73,12 +73,12 @@ async function extractMetadata(opts) {
   validateOptions(opts)
 
   // Merge the provided options with the default options.
-  const { dirName, srcDir, tagOptions, validExtensions } = mergeOptions(opts)
+  const { rootDir, srcDir, tagOptions, validExtensions } = mergeOptions(opts)
 
   try {
     const metadataList = await processDirectories(
       srcDir,
-      dirName,
+      rootDir,
       tagOptions,
       validExtensions
     )
@@ -99,7 +99,7 @@ async function extractMetadata(opts) {
  * Extract metadata from images in a directory and save it to a JSON file.
  *
  * @param {typedefs.Options} opts - An options object containing the following properties:
- *   - dirName: The absolute path to the project directory.
+ *   - rootDir: The absolute path to the project directory.
  *   - srcDir: Relative path of directory to traverse.
  *   - outputPath: A relative or absolute path to write JSON output, with filename.
  *   - tagOptions: An array of EXIF tags to extract.
@@ -109,7 +109,7 @@ async function extractMetadata(opts) {
  */
 async function extractMetadataToJsonFile(opts) {
   // Throw if the provided options are not valid.
-  const { dirName, outputPath } = mergeOptions(opts)
+  const { rootDir, outputPath } = mergeOptions(opts)
 
   try {
     const metadata = await extractMetadata(opts)
@@ -119,16 +119,17 @@ async function extractMetadataToJsonFile(opts) {
     if (path.isAbsolute(outputPath)) {
       fs.writeFileSync(outputPath, jsonOutput)
     } else {
-      fs.writeFileSync(path.resolve(dirName, outputPath), jsonOutput)
+      fs.writeFileSync(path.resolve(rootDir, outputPath), jsonOutput)
     }
-    console.log('Metadata saved as JSON to:', path.resolve(dirName, outputPath))
+    console.log('Metadata saved as JSON to:', path.resolve(rootDir, outputPath))
 
+    // Write missing tags log
     if (Object.keys(missingTags).length > 0) {
       try {
         const now = new Date()
         await writeToFile(
           'missing-tags.json',
-          path.resolve(dirName, outputPath),
+          path.resolve(rootDir, outputPath),
           JSON.stringify(missingTags, null, 2),
           false,
           `${now.getTime()}-`

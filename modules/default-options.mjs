@@ -6,7 +6,7 @@ import * as typedefs from './typedefs.mjs'
  * @type {typedefs.Options}
  */
 export const defaults = {
-  dirName: '',
+  rootDir: '',
   srcDir: '',
   outputPath: '',
   fileName: 'metadata.json',

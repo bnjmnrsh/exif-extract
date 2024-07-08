@@ -13,8 +13,10 @@
  *
  * @typedef {Object} Options - The default options.
  * @property {String} srcDir - Relative path of directory to traverse.
- * @property {String} outputPath - The relative path of the directory to write output.
- * @property {String} fileName - The name of the output file with extension.
- * @property {Array.<TagOps>} tagOptions - An array of EXIF tags to extract.
- * @property {Array.<string>} validExtensions - An array of valid media extensions.
+ * @property {String} rootDir - The absolute path to the project directory.
+ * @property {String} [outputPath] - The relative path of the directory to write output.
+ * @property {String} [fileName] - The name of the output file with extension.
+ * @property {Array.<TagOps>} [tagOptions] - An array of EXIF tags to extract.
+ * @property {Array.<string>} [validExtensions] - An array of valid media extensions.
  */
+
