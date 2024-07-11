@@ -14,7 +14,7 @@ import { exifExtract } from './modules/exiftool-instance.mjs'
  * Extract metadata from images in a directory and return it as an object, or write to file as JSON.
  *
  * Note: there is a lot of unevenness between tags and media/file types file types, which tools like Bridge and exiftool try to normalize where possible.
- * For example .mp4 files don't have a Keywords tag, so instead eAdobe Bridge also writes to the 'Subject' tag as this tag has better availability across media.
+ * For example .mp4 files don't have a Keywords tag, so instead Adobe Bridge also writes to the 'Subject' tag as this tag has better availability across media.
  * Also tags differ widely between manufacturers and even models so test your use cases extensively.
  *
  * Writing:
@@ -125,10 +125,13 @@ async function extractMetadataToJsonFile(opts) {
 
     // Write missing tags log
     if (Object.keys(missingTags).length > 0) {
+      const directory = path.dirname(outputPath)
+      const directoryName = path.basename(directory);
+
       try {
         const now = new Date()
         await writeToFile(
-          'missing-tags.json',
+          `missing-tags-${directoryName}.json`,
           path.resolve(rootDir, outputPath),
           JSON.stringify(missingTags, null, 2),
           false,
