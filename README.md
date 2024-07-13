@@ -1,5 +1,7 @@
 # EXIF EXTRACT
 
+__THIS PROJECT IS IN BETA:__ *Expect changes in API, incomplete documentaion and bugs. PR's and reports welcome.*  
+
 `exif-extract` is a thin wrapper for [`exiftool-vendored`](https://photostructure.github.io/exiftool-vendored.js/index.html), which in turn, is a JavaScript implementation of the excellent CLI application [`exiftool`](https://exiftool.org).
 
 `exif-extract` is designed to iterate over the content of a directory tree searching for targeted media types and returns a filtered set of EXIF metadata either as a JavaScript object or written to the filesystem as JSON. `exif-extract` provides a simple API and basic configuration options, including the ability to return default values for empty/missing EXIF tags, and optionally write these values back to the media file if desired.
