@@ -1,6 +1,6 @@
 {
   "name": "exif-extract",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "A thin wrapper for exif-vendored",
   "main": "./exif-extract.mjs",
   "scripts": {
@@ -13,7 +13,7 @@
   "author": "bnjmnrsh",
   "license": "ISC",
   "dependencies": {
-    "exiftool-vendored": "^26.2.0"
+    "exiftool-vendored": "^27.0.0"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^7.12.0",
