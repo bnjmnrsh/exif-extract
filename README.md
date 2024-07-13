@@ -38,10 +38,10 @@ __THIS PROJECT IS IN BETA:__ *Expect changes in API, incomplete documentaion and
 ## INSTALLATION
 
 ```bash
-    npm i -D bnjmnrsh/exif-extract@1.0.0
+    npm i -D bnjmnrsh/exif-extract@0.0.1
 ```
 
-We recommend pegging your install to a tag, as this will help ensure any upstream changes in `exiftool-vendored` will not affect your output.
+We recommend pegging your install to a tag, as this will ensure any changes will not affect your output.
 
 ## METHODS
 
